@@ -1,0 +1,123 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Секция с доступными разделами -->
+    <div class="card mb-5">
+        <div class="card-header">
+            <h2 class="mb-0">📂 Доступные разделы</h2>
+        </div>
+        <div class="card-body">
+            <div class="list-group">
+                <a href="{% url 'post-list' %}" class="list-group-item list-group-item-action">
+                    <h5 class="mb-1">📜 Все публикации</h5>
+                    <p class="mb-1">Последние добавленные посты сообщества</p>
+                </a>
+
+                {% if user.is_authenticated %}
+                    <a href="{% url 'create-post' %}" class="list-group-item list-group-item-action">
+                        <h5 class="mb-1">🖼️ Создать пост</h5>
+                        <p class="mb-1">Поделитесь своими фотографиями и мыслями</p>
+                    </a>
+                    <a href="{% url 'profile' %}" class="list-group-item list-group-item-action">
+                        <h5 class="mb-1">👤 Мой профиль</h5>
+                        <p class="mb-1">Ваши данные и активность</p>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Секция с последними публикациями -->
+<div class="card">
+        <div class="card-header">
+            <h2 class="mb-0">📌 Последние публикации</h2>
+        </div>
+        <div class="card-body">
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+                {% for post in posts %}
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card h-100">
+                        <img src="{{ post.image.url }}"
+                             class="card-img-top"
+                             alt="{{ post.text|truncatechars:30 }}"
+                             style="height: 250px; object-fit: cover;">
+
+                        <div class="card-body">
+                            <p class="card-text">{{ post.text|truncatechars:100 }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    👤 {{ post.author.username }}<br>
+                                    📅 {{ post.created_at|date:"d M Y H:i" }}
+                                </small>
+                                <div>
+                                    <span class="badge bg-primary me-2">
+                                        ❤️ {{ post.likes.count }}
+                                    </span>
+                                    <span class="badge bg-success">
+                                        💬 {{ post.comments.count }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a href="{% url 'post-detail' post.pk %}"
+                               class="btn btn-sm btn-outline-secondary">
+                                Подробнее →
+                            </a>
+                        </div>
+                    </div>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <!-- Форма лайка -->
+                                {% if user.is_authenticated %}
+                                <form method="post" action="{% url 'like-toggle' post_id=post.id %}">
+                                    {% csrf_token %}
+                                </form>
+                                {% else %}
+                                <a href="{% url 'login' %}" class="btn btn-sm btn-outline-secondary">
+                                    ❤️ {{ post.likes.count }}
+                                </a>
+                                {% endif %}
+
+                                <!-- Форма комментария -->
+                                <div class="input-group ms-2" style="width: 200px;">
+                                    {% if user.is_authenticated %}
+                                    <form method="post" action="{% url 'comment-create' post_id=post.id %}" class="d-flex">
+                                        {% csrf_token %}
+                                        <input type="text"
+                                               name="text"
+                                               class="form-control form-control-sm"
+                                               placeholder="Ваш комментарий..."
+                                               required>
+                                        <button type="submit" class="btn btn-sm btn-primary ms-2">
+                                            📨
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <a href="{% url 'login' %}" class="btn btn-sm btn-outline-secondary">
+                                        💬 Оставить комментарий
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Список комментариев -->
+                            <div class="mt-3">
+                                {% for comment in post.comments.all|slice:":3" %}
+                                <div class="d-flex align-items-center mb-2">
+                                    <small class="text-muted me-2">{{ comment.author.username }}:</small>
+                                    <div class="bg-light p-2 rounded">{{ comment.text }}</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
